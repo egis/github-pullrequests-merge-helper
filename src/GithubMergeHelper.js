@@ -157,9 +157,16 @@ export default class GithubMergeHelper {
   mergePullRequest(pullReq) {
     console.log('Merging..');
     return new Promise((resolve) => {
-      //TODO implement me
-      console.log(chalk.green('Merged successfully!'));
-      resolve();
+      let msg = {
+        number: pullReq.number
+      };
+      this.githubApi.pullRequests.merge(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
+        if (err) {
+          throw new Error(`Couldn't merge the PR #${pullReq.number}: ${err}`);
+        }
+        console.log(chalk.green('Merged successfully!'));
+        resolve();
+      });
     });
   }
 
