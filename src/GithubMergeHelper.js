@@ -67,18 +67,44 @@ export default class GithubMergeHelper {
     });
   }
 
-  isPrGreen(prData) {
-    return true;  //TODO implement me
-  }
-
   tooBad(caption, resolve) {
     console.log(this.formatNotice(caption));
     resolve();
   }
 
   filterByPattern(list) {
-    return list.filter((item) => {
-      return item.title.match(this.pattern);
+    return list.filter((item) => item.title.match(this.pattern));
+  }
+
+  greenStatus(statusesData) {
+    return statusesData.statuses.find((statusData) => {
+      return statusData.state == 'success' && statusData.context.startsWith('continuous-integration');
+    });
+  }
+
+  promiseToGetStatuses(req) {
+    return new Promise((resolve) => {
+      let msg = { sha: this.reqHeadSha(req) };
+      this.githubApi.statuses.getCombined(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
+        if (err) {
+          throw new Error(`Couldn't get status for PR ${msg}: ${err}`);
+        }
+        let greenStatus = this.greenStatus(data);
+        if (greenStatus) {
+          resolve([req, greenStatus]);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  findGreenFromList(list) {
+    return new Promise((resolve) => {
+      Promise.all(list.map(this.promiseToGetStatuses.bind(this))).then((reqs) => {
+        let greenData = reqs.find((item) => !!item);
+        resolve(greenData);
+      });
     });
   }
 
@@ -92,11 +118,12 @@ export default class GithubMergeHelper {
         if (list.length == 0) {
           return this.tooBad(`No open pull requests found for pattern ${this.pattern} at ${this.fullSlug}.`, resolve);
         }
-        let greenPr = list.find(this.isPrGreen.bind(this));
-        if (!greenPr) {
-          return this.tooBad(`No green pull requests found for given pattern at ${this.fullSlug}.`, resolve);
-        }
-        resolve(greenPr);
+        this.findGreenFromList(list).then((greenReqData) => {
+          if (!greenReqData) {
+            return this.tooBad(chalk.red(`No green pull requests found for given pattern at ${this.fullSlug}.`), resolve);
+          }
+          resolve(greenReqData);
+        });
       });
     });
   }
@@ -108,42 +135,70 @@ export default class GithubMergeHelper {
   confirmMergeWithUser(pullReq) {
     return new Promise((resolve) => {
       //TODO implement me
+      console.log('[gonna ask user here]');
       resolve();
     });
   }
 
   mergePullRequests(pullReq) {
-    //TODO implement me
-    console.log(chalk.green('Merged successfully!'));
+    return new Promise((resolve) => {
+      //TODO implement me
+      console.log(chalk.green('Merged successfully!'));
+      resolve();
+    });
   }
 
-  formatHeading(string) {
-    return chalk.green(string);
+  formatValue(string) {
+    return chalk.yellow(string);
   }
 
   formatNotice(string) {
     return chalk.yellow(string);
   }
 
-  tellAboutPr(pullReq) {
-    console.log(`The last ${chalk.green('green')} pull request on ${chalk.green(this.fullSlug)} is ${chalk.green(`PR #${pullReq.number}`)}:`);
-    let dateAttr = 'updated_at';
-    console.log(this.formatHeading('Date:'), pullReq[dateAttr]);
-    console.log(this.formatHeading('Title:'), pullReq.title);
-    console.log(this.formatHeading('Submitted by:'), pullReq.user.login);
-    // console.log(pullReq);
+  tellAboutPr(pullReq, status, commitData) {
+    console.log(`The last ${chalk.green('green')} pull request on ${this.formatValue(this.fullSlug)} is ${this.formatValue(`PR #${pullReq.number}`)}:`);
+    let createdAtAttr = 'created_at';
+    let updatedAtAttr = 'updated_at';
+    console.log('Title:', this.formatValue(pullReq.title));
+    console.log(`Submitted by ${this.formatValue(commitData.commit.committer.name)} on behalf of ${this.formatValue(commitData.commit.author.name)} at ${this.formatValue(pullReq[createdAtAttr])}`);
+    let ci = status.context.split('/')[1];
+    console.log(`Checked by ${chalk.green(ci)} at:`, chalk.green(status[updatedAtAttr]));
     this.showDiff(pullReq);
   }
 
+  fetchCommitData(sha) {
+    return new Promise((resolve) => {
+      let msg = {
+        sha: sha
+      };
+      this.githubApi.repos.getCommit(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
+        if (err) {
+          throw new Error(`Couldn't get commit info for ${sha}: ${err}`);
+        }
+        resolve(data);
+      });
+    });
+  }
+
+  reqHeadSha(pullReq) {
+    return pullReq.head.sha;
+  }
+
   doStuff() {
-    this.findlastGreenPullRequest().then((pullReq) => {
-      if (!pullReq) {
+    let pullReq;
+    let status;
+    this.findlastGreenPullRequest().then((pullReqData) => {
+      if (!pullReqData) {
         return;
       }
-      this.tellAboutPr(pullReq);
-      this.confirmMergeWithUser(pullReq).then(() => {
-        this.mergePullRequests(pullReq);
-      });
+      [pullReq, status] = pullReqData;
+      return this.fetchCommitData(this.reqHeadSha(pullReq));
+    }).then((commitData) => {
+      this.tellAboutPr(pullReq, status, commitData);
+      return this.confirmMergeWithUser(pullReq);
+    }).then(() => {
+      this.mergePullRequests(pullReq);
     });
   }
 
