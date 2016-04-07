@@ -23,6 +23,8 @@ export default class GithubMergeHelper {
     let [owner, repo] = parseSlug(repoArg);
     this.gitOwner = owner;
     this.gitRepoSlug = repo;
+    this.fullSlug = `${this.gitOwner}/${this.gitRepoSlug}`;
+    this.branch = 'master';
   }
 
   authenticate() {
@@ -41,30 +43,62 @@ export default class GithubMergeHelper {
     });
   }
 
+  gitRepoOptions() {
+    return {
+      user: this.gitOwner,
+      repo: this.gitRepoSlug
+    };
+  }
+
   getOpenPullRequests() {
-    return [{}]; //TODO implement me
+    return new Promise((resolve) => {
+      let msg = {
+        state: 'open',
+        base: this.branch,
+        sort: 'created',
+        direction: 'desc'
+      };
+      this.githubApi.pullRequests.getAll(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
+        if (err) {
+          throw new Error(`Couldn't get open PRs list for ${this.fullSlug}: ${err}`);
+        }
+        resolve(data);
+      });
+    });
   }
 
   isPrGreen(prData) {
     return true;  //TODO implement me
   }
 
-  fullSlug() {
-    return `${this.gitOwner}/${this.gitRepoSlug}`;
+  tooBad(caption, resolve) {
+    console.log(this.formatNotice(caption));
+    resolve();
+  }
+
+  filterByPattern(list) {
+    return list.filter((item) => {
+      return item.title.match(this.pattern);
+    });
   }
 
   findlastGreenPullRequest() {
-    let pullReqs = this.getOpenPullRequests();
-    if (pullReqs.length == 0) {
-      console.log(this.formatNotice(`No open pull requests found for ${this.fullSlug()}.`));
-      return;
-    }
-    let greenPr = pullReqs.find(this.isPrGreen.bind(this));
-    if (!greenPr) {
-      console.log(this.formatNotice(`No green pull requests found for ${this.fullSlug()}.`));
-      return;
-    }
-    return {};
+    return new Promise((resolve) => {
+      this.getOpenPullRequests().then((list) => {
+        if (list.length == 0) {
+          return this.tooBad(`No open pull requests found for ${this.fullSlug}.`, resolve);
+        }
+        list = this.filterByPattern(list);
+        if (list.length == 0) {
+          return this.tooBad(`No open pull requests found for pattern ${this.pattern} at ${this.fullSlug}.`, resolve);
+        }
+        let greenPr = list.find(this.isPrGreen.bind(this));
+        if (!greenPr) {
+          return this.tooBad(`No green pull requests found for given pattern at ${this.fullSlug}.`, resolve);
+        }
+        resolve(greenPr);
+      });
+    });
   }
 
   showDiff(pullReq) {
@@ -84,31 +118,38 @@ export default class GithubMergeHelper {
   }
 
   formatHeading(string) {
-    return chalk.cyan(string);
+    return chalk.green(string);
   }
 
   formatNotice(string) {
     return chalk.yellow(string);
   }
 
-  autoMerge() {
-    let pullReq = this.findlastGreenPullRequest();
-    if (!pullReq) {
-      return;
-    }
-    console.log(chalk.green(`Here\'s the last green pull request on ${this.fullSlug()}:`));
-    console.log(this.formatHeading('Date:'), pullReq.date);
+  tellAboutPr(pullReq) {
+    console.log(`The last ${chalk.green('green')} pull request on ${chalk.green(this.fullSlug)} is ${chalk.green(`PR #${pullReq.number}`)}:`);
+    let dateAttr = 'updated_at';
+    console.log(this.formatHeading('Date:'), pullReq[dateAttr]);
     console.log(this.formatHeading('Title:'), pullReq.title);
-    console.log(this.formatHeading('Submitted by:'), pullReq.author);
+    console.log(this.formatHeading('Submitted by:'), pullReq.user.login);
+    // console.log(pullReq);
     this.showDiff(pullReq);
-    this.confirmMergeWithUser(pullReq).then(() => {
-      this.mergePullRequests(pullReq);
+  }
+
+  doStuff() {
+    this.findlastGreenPullRequest().then((pullReq) => {
+      if (!pullReq) {
+        return;
+      }
+      this.tellAboutPr(pullReq);
+      this.confirmMergeWithUser(pullReq).then(() => {
+        this.mergePullRequests(pullReq);
+      });
     });
   }
 
   run() {
     this.readConfig();
     this.authenticate();
-    this.autoMerge();
+    this.doStuff();
   }
 }
