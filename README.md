@@ -9,9 +9,6 @@ Github pull requests merge and review command line tool.
 [![devDependency Status](https://david-dm.org/artemv/github-pullrequests-merge-helper/dev-status.svg)](https://david-dm.org/artemv/github-pullrequests-merge-helper#info=devDependencies)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
-## Project status
-This is work in progress, dont' use yet.
-
 ## Overview
 
 This module will
@@ -39,8 +36,9 @@ print it if you choose 'Other' CI instead of Travis.
 
 * Run it:
 ```
-  github-pullrequests-merge-helper git@github.com:egis/eSign.git --pattern="Update\s.+\sto\sversion"
+  github-pullrequests-merge-helper git@github.com:egis/eSign.git --pattern="Update\s.+\sto\sversion" --ci-context="continuous-integration"
 ```
+Here, ci-context is for Travis. Default is 'ci', that's for CircleCI. Pattern param is optional.
 
 ## License
 
