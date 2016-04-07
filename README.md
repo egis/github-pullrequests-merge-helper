@@ -1,7 +1,5 @@
 # github-pullrequests-merge-helper
 
-Github pull requests merge and review command line tool.
-
 [![NPM info][nodei.co]][npm-url]
 
 [![Circle CI](https://circleci.com/gh/artemv/github-pullrequests-merge-helper.svg?style=shield)](https://circleci.com/gh/artemv/github-pullrequests-merge-helper)
