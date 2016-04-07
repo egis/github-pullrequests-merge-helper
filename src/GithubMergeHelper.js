@@ -17,6 +17,7 @@ export default class GithubMergeHelper {
     let argv = minimist(process.argv.slice(2));
     let repoArg = argv._[0];
     this.pattern = argv.pattern;
+    this.debugMode = argv.debug;
     this.ciContext = argv['ci-context'] || 'ci'; // 'ci' is what CircleCI uses. Specify --ci-context="continuous-integration" for Travis.
     if (!repoArg) {
       throw 'Usage: github-pullrequests-merge-helper git@github.com:artemv/github-pullrequests-merge-helper.git --pattern="Update\\s.+\\sto\\sversion" --ci-context="continuous-integration"';
@@ -60,7 +61,10 @@ export default class GithubMergeHelper {
         sort: 'created',
         direction: 'desc'
       };
-      // msg.state = 'all';
+      if (this.debugMode) {
+        console.log('Debug mode: searching for closed PRs, too');
+        msg.state = 'all';
+      }
       this.githubApi.pullRequests.getAll(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
         if (err) {
           throw new Error(`Couldn't get open PRs list for ${this.fullSlug}: ${err}`);
@@ -138,8 +142,8 @@ export default class GithubMergeHelper {
     });
   }
 
-  showDiff(pullReq) {
-    //TODO implement me
+  showDiff(commitData) {
+    console.log('Diff:', commitData.files[0].patch);
   }
 
   confirmMergeWithUser(pullReq) {
@@ -175,14 +179,15 @@ export default class GithubMergeHelper {
     console.log(`Submitted by ${this.formatValue(commitData.commit.committer.name)} on behalf of ${this.formatValue(commitData.commit.author.name)} at ${this.formatValue(pullReq[createdAtAttr])}`);
     let ci = status.context.split('/')[1];
     console.log(`Approved by ${chalk.green(ci)} at:`, chalk.green(status[updatedAtAttr]));
-    this.showDiff(pullReq);
+    this.showDiff(commitData);
   }
 
   fetchCommitData(sha) {
     console.log('Fetching the commit data..');
     return new Promise((resolve) => {
       let msg = {
-        sha: sha
+        sha: sha,
+        'Content-Type': 'application/vnd.github.VERSION.diff'
       };
       this.githubApi.repos.getCommit(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
         if (err) {
