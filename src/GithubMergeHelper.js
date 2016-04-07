@@ -15,11 +15,11 @@ export default class GithubMergeHelper {
   readConfig() {
     let argv = minimist(process.argv.slice(2));
     let repoArg = argv._[0];
-    let patternArg = argv.pattern;
-    if (!repoArg || !patternArg) {
-      throw 'Usage: github-pullrequests-merge-helper git@github.com:artemv/github-pullrequests-merge-helper.git --pattern="Update\\s.+\\sto\\sversion"';
+    this.pattern = argv.pattern;
+    this.ciContext = argv['ci-context'] || 'ci'; // 'ci' is what CircleCI uses. Specify --ci-context="continuous-integration" for Travis.
+    if (!repoArg) {
+      throw 'Usage: github-pullrequests-merge-helper git@github.com:artemv/github-pullrequests-merge-helper.git --pattern="Update\\s.+\\sto\\sversion" --ci-context="continuous-integration"';
     }
-    this.pattern = patternArg;
     let [owner, repo] = parseSlug(repoArg);
     this.gitOwner = owner;
     this.gitRepoSlug = repo;
@@ -51,6 +51,7 @@ export default class GithubMergeHelper {
   }
 
   getOpenPullRequests() {
+    console.log('Retrieving the PRs list..');
     return new Promise((resolve) => {
       let msg = {
         state: 'open',
@@ -58,6 +59,7 @@ export default class GithubMergeHelper {
         sort: 'created',
         direction: 'desc'
       };
+      // msg.state = 'all';
       this.githubApi.pullRequests.getAll(Object.assign(this.gitRepoOptions(), msg), (err, data) => {
         if (err) {
           throw new Error(`Couldn't get open PRs list for ${this.fullSlug}: ${err}`);
@@ -73,12 +75,17 @@ export default class GithubMergeHelper {
   }
 
   filterByPattern(list) {
-    return list.filter((item) => item.title.match(this.pattern));
+    if (!this.pattern) {
+      return list;
+    }
+    let result = list.filter((item) => item.title.match(this.pattern));
+    console.log(`${result.length} PRs matched the pattern out of ${list.length}`);
+    return result;
   }
 
   greenStatus(statusesData) {
     return statusesData.statuses.find((statusData) => {
-      return statusData.state == 'success' && statusData.context.startsWith('continuous-integration');
+      return statusData.state == 'success' && statusData.context.startsWith(this.ciContext);
     });
   }
 
@@ -101,6 +108,8 @@ export default class GithubMergeHelper {
 
   findGreenFromList(list) {
     return new Promise((resolve) => {
+      console.log(`Searching for the last green request from the set of ${list.length}..`);
+      // need to get statuses for all the PRs here because it's async and we can first get response for not the latests PR
       Promise.all(list.map(this.promiseToGetStatuses.bind(this))).then((reqs) => {
         let greenData = reqs.find((item) => !!item);
         resolve(greenData);
@@ -168,6 +177,7 @@ export default class GithubMergeHelper {
   }
 
   fetchCommitData(sha) {
+    console.log('Fetching the commit data..');
     return new Promise((resolve) => {
       let msg = {
         sha: sha
