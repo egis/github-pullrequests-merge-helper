@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as github from 'github';
 import * as parseGithubUrl from '@bahmutov/parse-github-repo-url';
 
+import minimist from 'minimist';
+import chalk from 'chalk';
+
 const env = process.env;
 const GitHubApi = github.default;
 const parseSlug = parseGithubUrl.default;
@@ -10,8 +13,12 @@ const GH_TOKEN_KEY = 'GH_TOKEN';
 
 export default class GithubMergeHelper {
   readConfig() {
-    let repoArg = 'git@github.com:artemv/generator-ruby-starter-kit.git';
-    let patternArg = 'Update\s.+\sto\sversion';
+    let argv = minimist(process.argv.slice(2));
+    let repoArg = argv._[0];
+    let patternArg = argv.pattern;
+    if (!repoArg || !patternArg) {
+      throw 'Usage: github-pullrequests-merge-helper git@github.com:artemv/github-pullrequests-merge-helper.git --pattern="Update\\s.+\\sto\\sversion"';
+    }
     this.pattern = patternArg;
     let [owner, repo] = parseSlug(repoArg);
     this.gitOwner = owner;
@@ -49,12 +56,12 @@ export default class GithubMergeHelper {
   findlastGreenPullRequest() {
     let pullReqs = this.getOpenPullRequests();
     if (pullReqs.length == 0) {
-      console.log(`No open pull requests found for ${this.fullSlug()}`);
+      console.log(this.formatNotice(`No open pull requests found for ${this.fullSlug()}.`));
       return;
     }
     let greenPr = pullReqs.find(this.isPrGreen.bind(this));
     if (!greenPr) {
-      console.log(`No green pull requests found for ${this.fullSlug()}`);
+      console.log(this.formatNotice(`No green pull requests found for ${this.fullSlug()}.`));
       return;
     }
     return {};
@@ -73,7 +80,15 @@ export default class GithubMergeHelper {
 
   mergePullRequests(pullReq) {
     //TODO implement me
-    console.log('Merged successfully!');
+    console.log(chalk.green('Merged successfully!'));
+  }
+
+  formatHeading(string) {
+    return chalk.cyan(string);
+  }
+
+  formatNotice(string) {
+    return chalk.yellow(string);
   }
 
   autoMerge() {
@@ -81,10 +96,10 @@ export default class GithubMergeHelper {
     if (!pullReq) {
       return;
     }
-    console.log(`Here\'s the last green pull request on ${this.fullSlug()}:`);
-    console.log('Date:', pullReq.date);
-    console.log('Title:', pullReq.title);
-    console.log('Submitted by:', pullReq.author);
+    console.log(chalk.green(`Here\'s the last green pull request on ${this.fullSlug()}:`));
+    console.log(this.formatHeading('Date:'), pullReq.date);
+    console.log(this.formatHeading('Title:'), pullReq.title);
+    console.log(this.formatHeading('Submitted by:'), pullReq.author);
     this.showDiff(pullReq);
     this.confirmMergeWithUser(pullReq).then(() => {
       this.mergePullRequests(pullReq);
