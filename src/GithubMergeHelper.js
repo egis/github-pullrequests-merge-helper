@@ -172,7 +172,7 @@ export default class GithubMergeHelper {
     console.log('Title:', this.formatValue(pullReq.title));
     console.log(`Submitted by ${this.formatValue(commitData.commit.committer.name)} on behalf of ${this.formatValue(commitData.commit.author.name)} at ${this.formatValue(pullReq[createdAtAttr])}`);
     let ci = status.context.split('/')[1];
-    console.log(`Checked by ${chalk.green(ci)} at:`, chalk.green(status[updatedAtAttr]));
+    console.log(`Approved by ${chalk.green(ci)} at:`, chalk.green(status[updatedAtAttr]));
     this.showDiff(pullReq);
   }
 
