@@ -4,6 +4,7 @@ import * as parseGithubUrl from '@bahmutov/parse-github-repo-url';
 
 import minimist from 'minimist';
 import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 const env = process.env;
 const GitHubApi = github.default;
@@ -142,14 +143,15 @@ export default class GithubMergeHelper {
   }
 
   confirmMergeWithUser(pullReq) {
-    return new Promise((resolve) => {
-      //TODO implement me
-      console.log('[gonna ask user here]');
-      resolve();
+    return new Promise((resolve, reject) => {
+      inquirer.prompt([{name: 'merge', type: 'confirm', message: 'Do you want to merge it?'}], ({merge: confirm}) => {
+        confirm ? resolve() : reject();
+      });
     });
   }
 
-  mergePullRequests(pullReq) {
+  mergePullRequest(pullReq) {
+    console.log('Merging..');
     return new Promise((resolve) => {
       //TODO implement me
       console.log(chalk.green('Merged successfully!'));
@@ -208,7 +210,7 @@ export default class GithubMergeHelper {
       this.tellAboutPr(pullReq, status, commitData);
       return this.confirmMergeWithUser(pullReq);
     }).then(() => {
-      this.mergePullRequests(pullReq);
+      this.mergePullRequest(pullReq);
     });
   }
 
