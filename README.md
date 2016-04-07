@@ -47,3 +47,4 @@ MIT License 2016 © Artem Vasiliev
 
 [nodei.co]: https://nodei.co/npm/@egis/github-pullrequests-merge-helper.png
 [npm-url]: https://npmjs.org/package/@egis/github-pullrequests-merge-helper
+
