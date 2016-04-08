@@ -37,6 +37,9 @@
     "url": "https://github.com/artemv/github-pullrequests-merge-helper/issues"
   },
   "homepage": "https://github.com/artemv/github-pullrequests-merge-helper",
+  "release": {
+  "analyzeCommits": "./node_modules/@semantic-release/commit-analyzer/dist/index.js"
+  },
   "dependencies": {
     "@bahmutov/parse-github-repo-url": "^0.1.1",
     "babel-polyfill": "^6.3.14",
@@ -75,6 +78,7 @@
     "json-loader": "^0.5.3",
     "mocha": "^2.3.4",
     "semantic-release": "^4.3.5",
+    "@semantic-release/commit-analyzer": "github:artemv/commit-analyzer#414c9e8168518e00d5fd2bd0d653867404c994cb",
     "sinon": "^1.17.2",
     "sinon-chai": "^2.8.0",
     "vinyl-source-stream": "^1.1.0"
