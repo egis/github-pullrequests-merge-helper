@@ -30,7 +30,8 @@
     "github",
     "pull-requests",
     "merge",
-    "cli"
+    "cli",
+    "greenkeeper"
   ],
   "author": "Artem Vasiliev <artem.job@gmail.com>",
   "license": "MIT",
