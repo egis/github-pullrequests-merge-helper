@@ -38,7 +38,7 @@
   },
   "homepage": "https://github.com/artemv/github-pullrequests-merge-helper",
   "release": {
-  "analyzeCommits": "./node_modules/@semantic-release/commit-analyzer/dist/index.js"
+    "analyzeCommits": "./node_modules/@semantic-release/commit-analyzer/dist/index.js"
   },
   "dependencies": {
     "@bahmutov/parse-github-repo-url": "^0.1.1",
