@@ -19,9 +19,6 @@ This module is a CLI tool that
 This module plays perfectly to merge pull requests created by [semantic-dependents-updates-github](https://github.com/egis/semantic-dependents-updates-github) -
 that's why we wanted to create it in first place.
 
-## Limitations
-It only shows diff for single file from single commit of the PR (just enough for semantic-dependents-updates-github use case).
-
 ## Installation
 Install the package:
 ```
@@ -39,6 +36,9 @@ print it if you choose 'Other' CI instead of Travis.
   github-pullrequests-merge-helper git@github.com:artemv/generator-ruby-starter-kit.git --pattern="Update\s.+\sto\sversion" --ci-context="continuous-integration"
 ```
 Here, ci-context is for Travis. Default is 'ci', that's for CircleCI. Pattern param is optional.
+
+## Limitations
+It only shows diff for single file from single commit of the PR (just enough for semantic-dependents-updates-github use case).
 
 ## License
 
