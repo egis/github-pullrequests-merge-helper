@@ -1,7 +1,7 @@
 {
   "name": "@egis/github-pullrequests-merge-helper",
   "version": "0.0.0-semantic-release",
-  "description": "Github pull requests merge command line tool.",
+  "description": "Github pull requests merge command line tool",
   "main": "dist/bin/main.js",
   "files": [
     "dist",
