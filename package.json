@@ -28,7 +28,8 @@
   "keywords": [
     "github",
     "pull-requests",
-    "merge"
+    "merge",
+    "cli"
   ],
   "author": "Artem Vasiliev <artem.job@gmail.com>",
   "license": "MIT",

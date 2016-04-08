@@ -11,7 +11,7 @@
 
 ![Example screenshot](http://content.screencast.com/users/artemv/folders/Jing/media/7048f941-756c-49c9-b024-43e2a80a3078/00000612.png "Example screenshot")
 
-This module will
+This module is a CLI tool that
 * search for a last green (re CI) pull request having specfied pattern in its title for a given repo
 * show its diff and ask user confirmation to merge it
 * merge the pull request
