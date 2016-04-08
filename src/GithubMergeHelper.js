@@ -87,7 +87,7 @@ export default class GithubMergeHelper {
     }
     let result = list.filter((item) => item.title.match(this.pattern));
     if (result.length == list.length) {
-      console.log(`All pull requests matched the pattern`);
+      console.log('All pull requests matched the pattern');
     } else {
       console.log(`${pluralize('pull request', result.length, true)} matched the pattern`);
     }
