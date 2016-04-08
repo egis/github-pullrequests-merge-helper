@@ -5,6 +5,7 @@ import * as parseGithubUrl from '@bahmutov/parse-github-repo-url';
 import minimist from 'minimist';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
+import pluralize from 'pluralize';
 
 const env = process.env;
 const GitHubApi = github.default;
@@ -53,7 +54,7 @@ export default class GithubMergeHelper {
   }
 
   getOpenPullRequests() {
-    console.log('Retrieving the PRs list..');
+    console.log('Retrieving the pull requests..');
     return new Promise((resolve) => {
       let msg = {
         state: 'open',
@@ -69,6 +70,7 @@ export default class GithubMergeHelper {
         if (err) {
           throw new Error(`Couldn't get open PRs list for ${this.fullSlug}: ${err}`);
         }
+        console.log(`${pluralize('pull request', data.length, true)} found`);
         resolve(data);
       });
     });
@@ -84,7 +86,11 @@ export default class GithubMergeHelper {
       return list;
     }
     let result = list.filter((item) => item.title.match(this.pattern));
-    console.log(`${result.length} PRs matched the pattern out of ${list.length}`);
+    if (result.length == list.length) {
+      console.log(`All pull requests matched the pattern`);
+    } else {
+      console.log(`${pluralize('pull request', result.length, true)} matched the pattern`);
+    }
     return result;
   }
 
@@ -113,7 +119,7 @@ export default class GithubMergeHelper {
 
   findGreenFromList(list) {
     return new Promise((resolve) => {
-      console.log(`Searching for the last green request from the set of ${list.length}..`);
+      console.log(`Searching for the last green request..`);
       // need to get statuses for all the PRs here because it's async and we can first get response for not the latests PR
       Promise.all(list.map(this.promiseToGetStatuses.bind(this))).then((reqs) => {
         let greenData = reqs.find((item) => !!item);
