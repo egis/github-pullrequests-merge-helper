@@ -119,7 +119,7 @@ export default class GithubMergeHelper {
 
   findGreenFromList(list) {
     return new Promise((resolve) => {
-      console.log(`Searching for the last green request..`);
+      console.log('Searching for the last green request..');
       // need to get statuses for all the PRs here because it's async and we can first get response for not the latests PR
       Promise.all(list.map(this.promiseToGetStatuses.bind(this))).then((reqs) => {
         let greenData = reqs.find((item) => !!item);
