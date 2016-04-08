@@ -38,6 +38,7 @@
   },
   "homepage": "https://github.com/artemv/github-pullrequests-merge-helper",
   "release": {
+    "verifyConditions": "condition-circle",
     "analyzeCommits": "./node_modules/@semantic-release/commit-analyzer/dist/index.js"
   },
   "dependencies": {
