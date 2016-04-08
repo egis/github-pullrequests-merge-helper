@@ -34,7 +34,8 @@ print it if you choose 'Other' CI instead of Travis.
 
 * Run it:
 ```
-  github-pullrequests-merge-helper git@github.com:egis/eSign.git --pattern="Update\s.+\sto\sversion" --ci-context="continuous-integration"
+  github-pullrequests-merge-helper git@github.com:artemv/generator-ruby-starter-kit.git \
+    --pattern="Update\s.+\sto\sversion" --ci-context="continuous-integration"
 ```
 Here, ci-context is for Travis. Default is 'ci', that's for CircleCI. Pattern param is optional.
 
